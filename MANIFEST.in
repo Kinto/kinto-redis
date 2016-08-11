@@ -1,0 +1,3 @@
+recursive-include kinto_redis *
+include *
+global-exclude *.pyc
