@@ -18,6 +18,37 @@ storage, permissions and cache backends.
    with plugins that are using the ResourceChanged event to stop the
    user action. i.e To validate the request or to handle quota management.
 
+Installing ``kinto-redis``
+==========================
+
+You can use PyPI either installing kinto redis dependencies::
+
+    pip install kinto[redis]
+
+Or installing kinto-redis directly::
+
+    pip install kinto-redis
+
+
+Using Kinto Redis backends
+==========================
+
+After installing the ``kinto-redis`` package using PyPI, you can
+configure your server like that::
+
+    #
+    # Backends.
+    #
+    # https://kinto.readthedocs.io/en/latest/configuration/settings.html#storage
+    #
+    kinto.storage_backend = kinto_redis.storage
+    kinto.storage_url = redis://localhost:6379/1
+    kinto.cache_backend = kinto_redis.cache
+    kinto.cache_url = redis://localhost:6379/2
+    kinto.permission_backend = kinto_redis.permission
+    kinto.permission_url = redis://localhost:6379/3
+
+
 Running the tests
 =================
 
