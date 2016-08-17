@@ -141,8 +141,16 @@ class Storage(MemoryBasedStorage):
                id_field=DEFAULT_ID_FIELD,
                modified_field=DEFAULT_MODIFIED_FIELD,
                auth=None):
-        record = record.copy()
         id_generator = id_generator or self.id_generator
+        record = record.copy()
+        if id_field in record:
+            # Raise unicity error if record with same id already exists.
+            try:
+                existing = self.get(collection_id, parent_id, record[id_field])
+                raise exceptions.UnicityError(id_field, existing)
+            except exceptions.RecordNotFoundError:
+                pass
+
         _id = record.setdefault(id_field, id_generator())
         self.set_record_timestamp(collection_id, parent_id, record,
                                   modified_field=modified_field)
