@@ -5,7 +5,9 @@ Changelog
 1.1.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+**Bug fixes**
+
+- Fix compability with Kinto 4.0 about unique fields (Kinto/kinto#763)
 
 
 1.0.0 (2016-08-11)
