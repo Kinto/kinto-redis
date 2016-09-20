@@ -8,3 +8,4 @@ pytest-sugar
 tox
 unittest2
 webtest
+-e git+git@github.com:Kinto/kinto.git@801-move-backend-testing#egg=kinto
