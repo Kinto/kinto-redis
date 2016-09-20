@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import unittest
 import uuid
 from datetime import datetime
 from contextlib import contextmanager
@@ -9,7 +10,6 @@ from pyramid import testing
 
 from kinto.core import initialization
 from kinto.core.events import ResourceChanged, ACTIONS
-from kinto.tests.core.support import unittest
 
 from kinto_redis.storage import create_from_config
 

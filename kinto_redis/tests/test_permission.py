@@ -1,10 +1,9 @@
 import mock
-
 import redis
+import unittest
 from pyramid import testing
 
-from kinto.tests.core.support import unittest
-from kinto.tests.core.test_permission import BaseTestPermission
+from kinto.core.permission.testing import BaseTestPermission
 from kinto_redis import permission as redis_backend
 
 

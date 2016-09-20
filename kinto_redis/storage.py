@@ -328,32 +328,61 @@ class Storage(MemoryBasedStorage):
                 modified_field=DEFAULT_MODIFIED_FIELD,
                 deleted_field=DEFAULT_DELETED_FIELD,
                 auth=None):
-        records_ids_key = '{0}.{1}.records'.format(collection_id, parent_id)
-        ids = self._client.smembers(records_ids_key)
+        if collection_id is None:
+            collection_id = '*'
 
-        keys = ('{0}.{1}.{2}.records'.format(collection_id, parent_id,
-                                             _id.decode('utf-8'))
-                for _id in ids)
+        keys_pattern = '{0}.{1}.records'.format(collection_id, parent_id)
 
-        if len(ids) == 0:
-            records = []
-        else:
-            encoded_results = self._client.mget(keys)
-            records = [self._decode(r) for r in encoded_results if r]
+        collections_keys = [key.decode('utf-8') for key in
+                            self._client.scan_iter(match=keys_pattern)]
+
+        collections_keys = [key for key in collections_keys
+                            if len(key.split('.')) == 3]
+        with self._client.pipeline() as multi:
+            for key in collections_keys:
+                multi.smembers(key)
+            results = multi.execute()
+
+        records = []
+        for i, ids in enumerate(results):
+            collection_id, parent_id, _ = collections_keys[i].split('.')
+
+            if len(ids) == 0:  # pragma: no cover
+                continue
+
+            records_keys = ['{0}.{1}.{2}.records'.format(collection_id,
+                                                         parent_id,
+                                                         _id.decode('utf-8'))
+                            for _id in ids]
+            encoded_results = self._client.mget(records_keys)
+            collection_records = [self._decode(r) for r in encoded_results if r]
+            records.extend(collection_records)
 
         deleted = []
         if include_deleted:
-            deleted_ids = '{0}.{1}.deleted'.format(collection_id, parent_id)
-            ids = self._client.smembers(deleted_ids)
+            keys_pattern = '{0}.{1}.deleted'.format(collection_id, parent_id)
 
-            keys = ['{0}.{1}.{2}.deleted'.format(collection_id, parent_id,
-                                                 _id.decode('utf-8'))
-                    for _id in ids]
+            collections_keys = [key.decode('utf-8') for key in
+                                self._client.scan_iter(match=keys_pattern)]
 
-            if len(keys) == 0:
-                deleted = []
-            else:
-                encoded_results = self._client.mget(keys)
+            collections_keys = [key for key in collections_keys
+                                if len(key.split('.')) == 3]
+            with self._client.pipeline() as multi:
+                for key in collections_keys:
+                    multi.smembers(key)
+                results = multi.execute()
+
+            for i, ids in enumerate(results):
+                collection_id, parent_id, _ = collections_keys[i].split('.')
+
+                if len(ids) == 0:  # pragma: no cover
+                    continue
+
+                records_keys = ['{0}.{1}.{2}.deleted'.format(collection_id,
+                                                             parent_id,
+                                                             _id.decode('utf-8'))
+                                for _id in ids]
+                encoded_results = self._client.mget(records_keys)
                 deleted = [self._decode(r) for r in encoded_results if r]
 
         records, count = self.extract_record_set(records + deleted,
