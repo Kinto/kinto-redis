@@ -1,14 +1,14 @@
 import mock
+import unittest
 
 import redis
 from pyramid import testing
 
-from kinto.tests.core.support import unittest
-from kinto.tests.core.test_permission import BaseTestPermission
+from kinto.core.permission.testing import PermissionTest
 from kinto_redis import permission as redis_backend
 
 
-class RedisPermissionTest(BaseTestPermission, unittest.TestCase):
+class RedisPermissionTest(PermissionTest, unittest.TestCase):
     backend = redis_backend
     settings = {
         'permission_url': '',

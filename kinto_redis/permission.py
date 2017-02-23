@@ -86,7 +86,7 @@ class Permission(PermissionBase):
         return self._decode_set(members)
 
     @wrap_redis_error
-    def get_accessible_objects(self, principals, bound_permissions=None):
+    def get_accessible_objects(self, principals, bound_permissions=None, with_children=True):
         principals = set(principals)
 
         if bound_permissions:
