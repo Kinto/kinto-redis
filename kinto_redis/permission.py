@@ -169,13 +169,15 @@ class Permission(PermissionBase):
 def handle_with_children(keys, bound_permissions, with_children):
     results = set()
     if bound_permissions and not with_children:
+        regexps = [
+            re.compile(('permission:%s:%s' % (object_id, permission)).replace('*', '[^/]+'))
+            for object_id, permission in bound_permissions]
+
         for key in keys:
             decoded_key = key.decode('utf-8')
-            for object_id, permission in bound_permissions:
-                pattern = 'permission:%s:%s' % (object_id, permission)
-                regexp = re.compile('^%s$' % pattern.replace('*', '[^/]+'))
-                if regexp.match(decoded_key):
-                    results.add(key)
+            matches = [True for r in regexps if r.match(decoded_key)]
+            if matches:
+                results.add(key)
         return list(results)
     return keys
 
