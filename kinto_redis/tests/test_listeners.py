@@ -26,6 +26,7 @@ def broken_redis():
     yield
     StrictRedis.lpush = old
 
+
 UID = str(uuid.uuid4())
 
 

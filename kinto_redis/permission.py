@@ -104,7 +104,7 @@ class Permission(PermissionBase):
                     for object_id, permission in bound_permissions:
                         pattern = 'permission:%s:%s' % (object_id, permission)
                         regexp = re.compile('^%s$' % pattern.replace('*', '[^/]+'))
-                        if regexp.match(key):
+                        if regexp.match(key.decode('utf-8')):
                             one_of = True
                     if not one_of:
                         # Ignore not matching ones.
