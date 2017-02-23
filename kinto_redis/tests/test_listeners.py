@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import uuid
+import unittest
 from datetime import datetime
 from contextlib import contextmanager
 
@@ -9,7 +10,6 @@ from pyramid import testing
 
 from kinto.core import initialization
 from kinto.core.events import ResourceChanged, ACTIONS
-from kinto.tests.core.support import unittest
 
 from kinto_redis.storage import create_from_config
 
@@ -25,6 +25,7 @@ def broken_redis():
     StrictRedis.lpush = push
     yield
     StrictRedis.lpush = old
+
 
 UID = str(uuid.uuid4())
 

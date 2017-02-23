@@ -5,7 +5,7 @@ Changelog
 1.1.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Upgrade to last storage, permissions and cache backends features. (#7)
 
 
 1.0.1 (2016-08-18)

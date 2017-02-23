@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 import mock
 import redis
+import unittest
 from pyramid import testing
 
 from kinto.core.storage import exceptions
-from kinto.tests.core.test_storage import MemoryStorageTest, StorageTest
-from kinto.tests.core.support import unittest
+from kinto.core.storage.testing import StorageTest
 
 from kinto_redis import storage as redisbackend
 
 
-class RedisStorageTest(MemoryStorageTest, unittest.TestCase):
+class RedisStorageTest(StorageTest, unittest.TestCase):
     backend = redisbackend
     settings = {
         'storage_pool_size': 50,
@@ -20,8 +20,7 @@ class RedisStorageTest(MemoryStorageTest, unittest.TestCase):
     def setUp(self):
         super(RedisStorageTest, self).setUp()
         self.client_error_patcher = mock.patch.object(
-            self.storage._client.connection_pool,
-            'get_connection',
+            self.storage._client.connection_pool, 'get_connection',
             side_effect=redis.RedisError('connection error'))
 
     def test_config_is_taken_in_account(self):
@@ -37,12 +36,6 @@ class RedisStorageTest(MemoryStorageTest, unittest.TestCase):
         config.add_settings({'storage_pool_timeout': '1.5'})
         backend = self.backend.load_from_config(config)
         self.assertEqual(backend._client.connection_pool.timeout, 1.5)
-
-    def test_backend_error_provides_original_exception(self):
-        StorageTest.test_backend_error_provides_original_exception(self)
-
-    def test_raises_backend_error_if_error_occurs_on_client(self):
-        StorageTest.test_raises_backend_error_if_error_occurs_on_client(self)
 
     def test_backend_error_is_raised_anywhere(self):
         with mock.patch.object(self.storage._client, 'pipeline',

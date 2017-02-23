@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from collections import defaultdict
+import re
 
 from kinto.core.permission import PermissionBase
 from kinto_redis.storage import create_from_config, wrap_redis_error
@@ -64,8 +64,12 @@ class Permission(PermissionBase):
 
     @wrap_redis_error
     def get_user_principals(self, user_id):
+        # Fetch the groups the user is in.
         user_key = 'user:%s' % user_id
-        return self._decode_set(self._client.smembers(user_key))
+        members = self._decode_set(self._client.smembers(user_key))
+        # Fetch the groups system.Authenticated is in.
+        group_authenticated = self._decode_set(self._client.smembers('user:system.Authenticated'))
+        return members | group_authenticated
 
     @wrap_redis_error
     def add_principal_to_ace(self, object_id, permission, principal):
@@ -86,17 +90,17 @@ class Permission(PermissionBase):
         return self._decode_set(members)
 
     @wrap_redis_error
-    def get_accessible_objects(self, principals, bound_permissions=None):
+    def get_accessible_objects(self, principals, bound_permissions=None, with_children=True):
         principals = set(principals)
 
         if bound_permissions:
             keys = ['permission:%s:%s' % op for op in bound_permissions]
         else:
             keys = ['permission:*']
-
         perms_by_id = dict()
         for key_pattern in keys:
-            matched = self._client.scan_iter(match=key_pattern)
+            matched = handle_with_children(self._client.scan_iter(match=key_pattern),
+                                           bound_permissions, with_children)
             for key in matched:
                 authorized = self._decode_set(self._client.smembers(key))
                 if len(authorized & principals) > 0:
@@ -116,7 +120,7 @@ class Permission(PermissionBase):
     def get_objects_permissions(self, objects_ids, permissions=None):
         objects_perms = []
         for object_id in objects_ids:
-            if permissions is not None:
+            if permissions:
                 keys = ['permission:%s:%s' % (object_id, permission)
                         for permission in permissions]
             else:
@@ -129,10 +133,12 @@ class Permission(PermissionBase):
 
                 results = pipe.execute()
 
-            permissions = defaultdict(set)
+            permissions = {}
             for i, result in enumerate(results):
                 permission = keys[i].split(':', 2)[-1]
-                permissions[permission] = self._decode_set(result)
+                principals = self._decode_set(result)
+                if principals:
+                    permissions[permission] = principals
             objects_perms.append(permissions)
         return objects_perms
 
@@ -158,6 +164,22 @@ class Permission(PermissionBase):
                 if len(keys) > 0:
                     pipe.delete(*keys)
             pipe.execute()
+
+
+def handle_with_children(keys, bound_permissions, with_children):
+    results = set()
+    if bound_permissions and not with_children:
+        regexps = [
+            re.compile(('permission:%s:%s' % (object_id, permission)).replace('*', '[^/]+'))
+            for object_id, permission in bound_permissions]
+
+        for key in keys:
+            decoded_key = key.decode('utf-8')
+            matches = [True for r in regexps if r.match(decoded_key)]
+            if matches:
+                results.add(key)
+        return list(results)
+    return keys
 
 
 def load_from_config(config):
