@@ -64,8 +64,10 @@ class Permission(PermissionBase):
 
     @wrap_redis_error
     def get_user_principals(self, user_id):
+        # Fetch the groups the user is in.
         user_key = 'user:%s' % user_id
         members = self._decode_set(self._client.smembers(user_key))
+        # Fetch the groups system.Authenticated is in.
         group_authenticated = self._decode_set(self._client.smembers('user:system.Authenticated'))
         return members | group_authenticated
 
@@ -97,18 +99,9 @@ class Permission(PermissionBase):
             keys = ['permission:*']
         perms_by_id = dict()
         for key_pattern in keys:
-            matched = self._client.scan_iter(match=key_pattern)
+            matched = handle_with_children(self._client.scan_iter(match=key_pattern),
+                                           bound_permissions, with_children)
             for key in matched:
-                if bound_permissions and not with_children:
-                    one_of = False
-                    for object_id, permission in bound_permissions:
-                        pattern = 'permission:%s:%s' % (object_id, permission)
-                        regexp = re.compile('^%s$' % pattern.replace('*', '[^/]+'))
-                        if regexp.match(key.decode('utf-8')):
-                            one_of = True
-                    if not one_of:
-                        # Ignore not matching ones.
-                        continue
                 authorized = self._decode_set(self._client.smembers(key))
                 if len(authorized & principals) > 0:
                     _, obj_id, permission = key.decode('utf-8').split(':', 2)
@@ -171,6 +164,20 @@ class Permission(PermissionBase):
                 if len(keys) > 0:
                     pipe.delete(*keys)
             pipe.execute()
+
+
+def handle_with_children(keys, bound_permissions, with_children):
+    results = set()
+    if bound_permissions and not with_children:
+        for key in keys:
+            decoded_key = key.decode('utf-8')
+            for object_id, permission in bound_permissions:
+                pattern = 'permission:%s:%s' % (object_id, permission)
+                regexp = re.compile('^%s$' % pattern.replace('*', '[^/]+'))
+                if regexp.match(decoded_key):
+                    results.add(key)
+        return list(results)
+    return keys
 
 
 def load_from_config(config):
