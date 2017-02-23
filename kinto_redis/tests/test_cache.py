@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import mock
 import redis
+import unittest
 from pyramid import testing
 
-from kinto.tests.core.support import unittest
-from kinto.tests.core.test_cache import BaseTestCache
+from kinto.core.cache.testing import CacheTest
 from kinto_redis import cache as redis_backend
 
 
-class RedisCacheTest(BaseTestCache, unittest.TestCase):
+class RedisCacheTest(CacheTest, unittest.TestCase):
     backend = redis_backend
     settings = {
         'cache_url': '',

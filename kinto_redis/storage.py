@@ -321,6 +321,43 @@ class Storage(MemoryBasedStorage):
             number_deleted += len(to_remove)
         return number_deleted
 
+    def _get_objects_by_parent_id(self, parent_id, collection_id,
+                                  with_meta=False, obj_type="records"):
+        keys_pattern = '{0}.{1}.{2}'.format(collection_id, parent_id, obj_type)
+
+        collections_keys = [key.decode('utf-8') for key in
+                            self._client.scan_iter(match=keys_pattern)]
+
+        collections_keys = [key for key in collections_keys
+                            if len(key.split('.')) == 3]
+
+        with self._client.pipeline() as multi:
+            for key in collections_keys:
+                multi.smembers(key)
+            results = multi.execute()
+
+        records = []
+        for i, ids in enumerate(results):
+            collection_id, parent_id, _ = collections_keys[i].split('.')
+
+            if len(ids) == 0:  # pragma: no cover
+                continue
+
+            records_keys = ['{0}.{1}.{2}.{3}'.format(collection_id,
+                                                     parent_id,
+                                                     _id.decode('utf-8'),
+                                                     obj_type)
+                            for _id in ids]
+            encoded_results = self._client.mget(records_keys)
+            if with_meta:
+                collection_records = [dict(__collection_id__=collection_id,
+                                           __parent_id__=parent_id,
+                                           **self._decode(r)) for r in encoded_results if r]
+            else:
+                collection_records = [self._decode(r) for r in encoded_results if r]
+            records.extend(collection_records)
+        return records
+
     @wrap_redis_error
     def get_all(self, collection_id, parent_id, filters=None, sorting=None,
                 pagination_rules=None, limit=None, include_deleted=False,
@@ -328,33 +365,14 @@ class Storage(MemoryBasedStorage):
                 modified_field=DEFAULT_MODIFIED_FIELD,
                 deleted_field=DEFAULT_DELETED_FIELD,
                 auth=None):
-        records_ids_key = '{0}.{1}.records'.format(collection_id, parent_id)
-        ids = self._client.smembers(records_ids_key)
+        if collection_id is None:
+            collection_id = '*'
 
-        keys = ('{0}.{1}.{2}.records'.format(collection_id, parent_id,
-                                             _id.decode('utf-8'))
-                for _id in ids)
-
-        if len(ids) == 0:
-            records = []
-        else:
-            encoded_results = self._client.mget(keys)
-            records = [self._decode(r) for r in encoded_results if r]
+        records = self._get_objects_by_parent_id(parent_id, collection_id)
 
         deleted = []
         if include_deleted:
-            deleted_ids = '{0}.{1}.deleted'.format(collection_id, parent_id)
-            ids = self._client.smembers(deleted_ids)
-
-            keys = ['{0}.{1}.{2}.deleted'.format(collection_id, parent_id,
-                                                 _id.decode('utf-8'))
-                    for _id in ids]
-
-            if len(keys) == 0:
-                deleted = []
-            else:
-                encoded_results = self._client.mget(keys)
-                deleted = [self._decode(r) for r in encoded_results if r]
+            deleted = self._get_objects_by_parent_id(parent_id, collection_id, obj_type='deleted')
 
         records, count = self.extract_record_set(records + deleted,
                                                  filters, sorting,
@@ -373,39 +391,8 @@ class Storage(MemoryBasedStorage):
         if collection_id is None:
             collection_id = '*'
 
-        keys_pattern = '{0}.{1}.records'.format(collection_id, parent_id)
-
-        collections_keys = [key.decode('utf-8') for key in
-                            self._client.scan_iter(match=keys_pattern)]
-
-        collections_keys = [key for key in collections_keys
-                            if len(key.split('.')) == 3]
-        with self._client.pipeline() as multi:
-            for key in collections_keys:
-                multi.smembers(key)
-            results = multi.execute()
-
-        records = []
-        for i, ids in enumerate(results):
-            collection_id, parent_id, _ = collections_keys[i].split('.')
-
-            if len(ids) == 0:  # pragma: no cover
-                continue
-
-            records_keys = ['{0}.{1}.{2}.records'.format(collection_id,
-                                                         parent_id,
-                                                         _id.decode('utf-8'))
-                            for _id in ids]
-            results = self._client.mget(records_keys)
-            collection_records = [dict(__collection_id__=collection_id,
-                                       __parent_id__=parent_id,
-                                       **self._decode(r))
-                                  for r in results if r]
-            records.extend(collection_records)
-
-        records, count = self.extract_record_set(records,
-                                                 filters, None,
-                                                 id_field, deleted_field)
+        records = self._get_objects_by_parent_id(parent_id, collection_id, with_meta=True)
+        records, count = self.extract_record_set(records, filters, None, id_field, deleted_field)
 
         deleted = [self.delete(r.pop('__collection_id__'),
                                r.pop('__parent_id__'),
