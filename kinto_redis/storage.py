@@ -372,9 +372,6 @@ class Storage(MemoryBasedStorage):
 
         deleted = []
         if include_deleted:
-            if collection_id is None:
-                collection_id = '*'
-
             keys_pattern = '{0}.{1}.deleted'.format(collection_id, parent_id)
 
             collections_keys = [key.decode('utf-8') for key in
