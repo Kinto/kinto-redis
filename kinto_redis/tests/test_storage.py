@@ -60,9 +60,3 @@ class RedisStorageTest(StorageTest, unittest.TestCase):
                 self.storage.get_all(**self.storage_kw)
 
         self.assertTrue(exc_handler.called)
-
-    def test_backenderror_message_default_to_original_exception_message(self):
-        pass
-
-    def test_ping_logs_error_if_unavailable(self):
-        pass
