@@ -70,7 +70,10 @@ class Cache(CacheBase):
 
     @wrap_redis_error
     def delete(self, key):
-        self._client.delete(self.prefix + key)
+        value = self._client.delete(self.prefix + key)
+        if value:
+            value = value.decode('utf-8')
+            return json.loads(value)
 
 
 def load_from_config(config):
