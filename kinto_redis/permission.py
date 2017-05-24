@@ -176,13 +176,10 @@ class Permission(PermissionBase):
 
 
 def filter_by_regexp(keys, regexps):
-    if not regexps:  # No regexp means all.
-        return keys
-
     results = set()
     for key in keys:
         decoded_key = key.decode('utf-8')
-        if any([r.match(decoded_key) for r in regexps]):
+        if not regexps or any([r.match(decoded_key) for r in regexps]):
             results.add(key)
     return list(results)
 
