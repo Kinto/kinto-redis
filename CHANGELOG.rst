@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.2.0 (unreleased)
+1.2.0 (2017-08-17)
 ------------------
 
 - Cache set now requires a ttl value
