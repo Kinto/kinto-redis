@@ -1,12 +1,13 @@
 from __future__ import absolute_import, unicode_literals
 from functools import wraps
 
+import ujson
 import redis
 from six.moves.urllib import parse as urlparse
 
-from kinto.core import utils, logger
+from kinto.core import utils
 from kinto.core.storage import (
-    exceptions, DEFAULT_ID_FIELD,
+    exceptions, logger, DEFAULT_ID_FIELD,
     DEFAULT_MODIFIED_FIELD, DEFAULT_DELETED_FIELD)
 from kinto.core.storage.memory import MemoryBasedStorage
 
@@ -140,13 +141,15 @@ class Storage(MemoryBasedStorage):
     def create(self, collection_id, parent_id, record, id_generator=None,
                id_field=DEFAULT_ID_FIELD,
                modified_field=DEFAULT_MODIFIED_FIELD,
-               auth=None):
+               auth=None, ignore_conflict=False):
         id_generator = id_generator or self.id_generator
-        record = record.copy()
+        record = ujson.loads(self.json.dumps(record))
         if id_field in record:
             # Raise unicity error if record with same id already exists.
             try:
                 existing = self.get(collection_id, parent_id, record[id_field])
+                if ignore_conflict:
+                    return existing
                 raise exceptions.UnicityError(id_field, existing)
             except exceptions.RecordNotFoundError:
                 pass
@@ -194,7 +197,7 @@ class Storage(MemoryBasedStorage):
                id_field=DEFAULT_ID_FIELD,
                modified_field=DEFAULT_MODIFIED_FIELD,
                auth=None):
-        record = record.copy()
+        record = ujson.loads(self.json.dumps(record))
         record[id_field] = object_id
         self.set_record_timestamp(collection_id, parent_id, record,
                                   modified_field=modified_field)

@@ -54,12 +54,11 @@ class Cache(CacheBase):
         self._client.pexpire(self.prefix + key, int(ttl * 1000))
 
     @wrap_redis_error
-    def set(self, key, value, ttl=None):
+    def set(self, key, value, ttl):
+        if isinstance(value, bytes):
+            raise TypeError("a string-like object is required, not 'bytes'")
         value = json.dumps(value)
-        if ttl:
-            self._client.psetex(self.prefix + key, int(ttl * 1000), value)
-        else:
-            self._client.set(self.prefix + key, value)
+        self._client.psetex(self.prefix + key, int(ttl * 1000), value)
 
     @wrap_redis_error
     def get(self, key):
@@ -70,10 +69,9 @@ class Cache(CacheBase):
 
     @wrap_redis_error
     def delete(self, key):
-        value = self._client.delete(self.prefix + key)
-        if value:
-            value = value.decode('utf-8')
-            return json.loads(value)
+        value = self.get(key)
+        self._client.delete(self.prefix + key)
+        return value
 
 
 def load_from_config(config):
