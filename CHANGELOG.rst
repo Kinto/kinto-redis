@@ -5,7 +5,7 @@ Changelog
 1.2.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Cache delete() method now returns the deleted value
 
 
 1.1.0 (2017-02-23)
