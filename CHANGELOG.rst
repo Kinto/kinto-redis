@@ -5,7 +5,9 @@ Changelog
 1.2.0 (unreleased)
 ------------------
 
+- Cache set now requires a ttl value
 - Cache delete() method now returns the deleted value
+- Cache never accept to store bytes.
 
 
 1.1.0 (2017-02-23)
