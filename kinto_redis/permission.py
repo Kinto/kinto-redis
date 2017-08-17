@@ -95,13 +95,22 @@ class Permission(PermissionBase):
 
         if bound_permissions:
             keys = ['permission:%s:%s' % op for op in bound_permissions]
+            regexp_bound_permissions = [re.compile(k.replace('*', '[^/]+')) for k in keys]
         else:
             keys = ['permission:*']
+            regexp_bound_permissions = []
+
         perms_by_id = dict()
         for key_pattern in keys:
-            matched = handle_with_children(self._client.scan_iter(match=key_pattern),
-                                           bound_permissions, with_children)
-            for key in matched:
+            # By default Redis will include sub-objects.
+            # (eg. /buckets/* -> /buckets/<>/collections/<>)
+            matching_keys = self._client.scan_iter(match=key_pattern)
+            # If no children should be returned, then limit matching keys
+            # to those matching the provided bound permissions.
+            if not with_children:
+                matching_keys = filter_by_regexp(matching_keys, regexp_bound_permissions)
+
+            for key in matching_keys:
                 authorized = self._decode_set(self._client.smembers(key))
                 if len(authorized & principals) > 0:
                     _, obj_id, permission = key.decode('utf-8').split(':', 2)
@@ -166,20 +175,13 @@ class Permission(PermissionBase):
             pipe.execute()
 
 
-def handle_with_children(keys, bound_permissions, with_children):
+def filter_by_regexp(keys, regexps):
     results = set()
-    if bound_permissions and not with_children:
-        regexps = [
-            re.compile(('permission:%s:%s' % (object_id, permission)).replace('*', '[^/]+'))
-            for object_id, permission in bound_permissions]
-
-        for key in keys:
-            decoded_key = key.decode('utf-8')
-            matches = [True for r in regexps if r.match(decoded_key)]
-            if matches:
-                results.add(key)
-        return list(results)
-    return keys
+    for key in keys:
+        decoded_key = key.decode('utf-8')
+        if not regexps or any([r.match(decoded_key) for r in regexps]):
+            results.add(key)
+    return list(results)
 
 
 def load_from_config(config):
