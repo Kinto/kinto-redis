@@ -21,7 +21,6 @@ setup(name='kinto-redis',
       long_description=README + '\r\n' + CHANGELOG,
       license='Apache License (2.0)',
       classifiers=[
-          "Programming Language :: Python",
           "Topic :: Internet :: WWW/HTTP",
           "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
           "License :: OSI Approved :: Apache Software License",
