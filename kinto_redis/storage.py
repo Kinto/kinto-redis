@@ -94,11 +94,11 @@ class Storage(MemoryBasedStorage):
         if self.readonly:
             error_msg = 'Cannot initialize empty collection timestamp when running in readonly.'
             raise exceptions.BackendError(message=error_msg)
-        return self._bump_timestamp(collection_id, parent_id)
+        return self._bump_and_store_timestamp(collection_id, parent_id)
 
     @wrap_redis_error
-    def _bump_timestamp(self, collection_id, parent_id, record=None,
-                        modified_field=None, last_modified=None):
+    def _bump_and_store_timestamp(self, collection_id, parent_id, record=None,
+                                  modified_field=None, last_modified=None):
 
         key = '{0}.{1}.timestamp'.format(collection_id, parent_id)
         while 1:
@@ -108,7 +108,7 @@ class Storage(MemoryBasedStorage):
                     current_collection_timestamp = int(pipe.get(key) or 0)
                     pipe.multi()
 
-                    current, collection_timestamp = self._manage_collection_timestamp(
+                    current, collection_timestamp = self.bump_timestamp(
                         current_collection_timestamp,
                         record, modified_field,
                         last_modified)
