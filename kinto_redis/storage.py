@@ -106,13 +106,13 @@ class Storage(MemoryBasedStorage):
                 try:
                     pipe.watch(key)
                     current_collection_timestamp = int(pipe.get(key) or 0)
-                    pipe.multi()
 
                     current, collection_timestamp = self.bump_timestamp(
                         current_collection_timestamp,
                         record, modified_field,
                         last_modified)
 
+                    pipe.multi()
                     pipe.set(key, collection_timestamp)
                     pipe.execute()
                     return current
