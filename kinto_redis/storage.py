@@ -133,8 +133,6 @@ class Storage(MemoryBasedStorage):
             # Raise unicity error if record with same id already exists.
             try:
                 existing = self.get(collection_id, parent_id, record[id_field])
-                if ignore_conflict:
-                    return existing
                 raise exceptions.UnicityError(id_field, existing)
             except exceptions.RecordNotFoundError:
                 pass
