@@ -66,8 +66,9 @@ class Storage(MemoryBasedStorage):
         kinto.storage_pool_size = 50
     """
 
-    def __init__(self, client, *args, **kwargs):
+    def __init__(self, client, *args, readonly=False, **kwargs):
         super(Storage, self).__init__(*args, **kwargs)
+        self.readonly = readonly
         self._client = client
 
     @property
@@ -90,6 +91,9 @@ class Storage(MemoryBasedStorage):
             '{0}.{1}.timestamp'.format(collection_id, parent_id))
         if timestamp:
             return int(timestamp)
+        if self.readonly:
+            error_msg = 'Cannot initialize empty collection timestamp when running in readonly.'
+            raise exceptions.BackendError(message=error_msg)
         return self._bump_timestamp(collection_id, parent_id)
 
     @wrap_redis_error
@@ -101,32 +105,13 @@ class Storage(MemoryBasedStorage):
             with self._client.pipeline() as pipe:
                 try:
                     pipe.watch(key)
-                    previous = pipe.get(key)
+                    current_collection_timestamp = int(pipe.get(key) or 0)
                     pipe.multi()
-                    # XXX factorize code from memory and redis backends.
-                    is_specified = (record is not None and
-                                    modified_field in record or
-                                    last_modified is not None)
-                    if is_specified:
-                        # If there is a timestamp in the new record,
-                        # try to use it.
-                        if last_modified is not None:
-                            current = last_modified
-                        else:
-                            current = record[modified_field]
-                    else:
-                        current = utils.msec_time()
 
-                    if previous and int(previous) >= current:
-                        collection_timestamp = int(previous) + 1
-                    else:
-                        collection_timestamp = current
-
-                    # Return the newly generated timestamp as the current one
-                    # only if nothing else was specified.
-                    is_equal = previous and int(previous) == current
-                    if not is_specified or is_equal:
-                        current = collection_timestamp
+                    current, collection_timestamp = self._manage_collection_timestamp(
+                        current_collection_timestamp,
+                        record, modified_field,
+                        last_modified)
 
                     pipe.set(key, collection_timestamp)
                     pipe.execute()
