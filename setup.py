@@ -11,7 +11,7 @@ with codecs.open(os.path.join(here, 'CHANGELOG.rst'), encoding='utf-8') as f:
     CHANGELOG = f.read()
 
 REQUIREMENTS = [
-    'kinto>=9.0.0',
+    'kinto',
     'redis',
 ]
 
