@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.3.0 (unreleased)
+1.3.0 (2018-04-26)
 ------------------
 
 - Update storage tests with new Kinto 9.x features. (#13)
