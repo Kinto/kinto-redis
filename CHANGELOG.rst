@@ -5,7 +5,7 @@ Changelog
 1.3.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Update storage tests with new Kinto 9.x features. (#13)
 
 
 1.2.0 (2017-08-17)
