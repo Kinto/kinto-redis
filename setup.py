@@ -16,7 +16,7 @@ REQUIREMENTS = [
 ]
 
 setup(name='kinto-redis',
-      version='1.3.0',
+      version='1.4.0.dev0',
       description='Kinto Redis',
       long_description=README + '\r\n' + CHANGELOG,
       license='Apache License (2.0)',
