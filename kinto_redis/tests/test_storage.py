@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 import redis
 import unittest
 from pyramid import testing
@@ -20,7 +20,8 @@ class RedisStorageTest(StorageTest, unittest.TestCase):
         super(RedisStorageTest, self).setUp()
         self.client_error_patcher = mock.patch.object(
             self.storage._client.connection_pool, 'get_connection',
-            side_effect=redis.RedisError('connection error'))
+            side_effect=redis.exceptions.RedisError('connection error')
+        )
 
     def test_config_is_taken_in_account(self):
         config = testing.setUp(settings=self.settings)

@@ -1,7 +1,7 @@
-import mock
 import redis
 import unittest
 from pyramid import testing
+from unittest import mock
 
 from kinto.core.cache.testing import CacheTest
 from kinto_redis import cache as redis_backend

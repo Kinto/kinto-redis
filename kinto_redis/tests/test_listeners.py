@@ -3,8 +3,8 @@ import uuid
 import unittest
 from datetime import datetime
 from contextlib import contextmanager
+from unittest import mock
 
-import mock
 from pyramid import testing
 
 from kinto.core import initialization

@@ -17,7 +17,7 @@ def wrap_redis_error(func):
     def wrapped(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except redis.RedisError as e:
+        except redis.exceptions.RedisError as e:
             logger.exception(e)
             raise exceptions.BackendError(original=e)
     return wrapped
@@ -319,10 +319,10 @@ class Storage(MemoryBasedStorage):
         keys_pattern = '{0}.{1}.objects'.format(resource_name, parent_id)
 
         resources_keys = [key.decode('utf-8') for key in
-                            self._client.scan_iter(match=keys_pattern)]
+                          self._client.scan_iter(match=keys_pattern)]
 
         resources_keys = [key for key in resources_keys
-                            if len(key.split('.')) == 3]
+                          if len(key.split('.')) == 3]
         with self._client.pipeline() as multi:
             for key in resources_keys:
                 multi.smembers(key)
@@ -353,11 +353,11 @@ class Storage(MemoryBasedStorage):
 
     @wrap_redis_error
     def list_all(self, resource_name, parent_id, filters=None, sorting=None,
-                pagination_rules=None, limit=None, include_deleted=False,
-                id_field=DEFAULT_ID_FIELD,
-                modified_field=DEFAULT_MODIFIED_FIELD,
-                deleted_field=DEFAULT_DELETED_FIELD,
-                auth=None):
+                 pagination_rules=None, limit=None, include_deleted=False,
+                 id_field=DEFAULT_ID_FIELD,
+                 modified_field=DEFAULT_MODIFIED_FIELD,
+                 deleted_field=DEFAULT_DELETED_FIELD,
+                 auth=None):
 
         objects = self._get_objects_by_parent_id(parent_id, resource_name)
 
