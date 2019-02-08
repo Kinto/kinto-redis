@@ -62,7 +62,7 @@ class Cache(CacheBase):
     def get(self, key):
         value = self._client.get(self.prefix + key)
         if value:
-            value = value.decode('utf-8')
+            value = value.decode("utf-8")
             return json.loads(value)
 
     @wrap_redis_error
@@ -74,5 +74,5 @@ class Cache(CacheBase):
 
 def load_from_config(config):
     settings = config.get_settings()
-    client = create_from_config(config, prefix='cache_')
-    return Cache(client, cache_prefix=settings['cache_prefix'])
+    client = create_from_config(config, prefix="cache_")
+    return Cache(client, cache_prefix=settings["cache_prefix"])

@@ -16,10 +16,11 @@ from kinto_redis.storage import create_from_config
 @contextmanager
 def broken_redis():
     from redis import StrictRedis
+
     old = StrictRedis.lpush
 
     def push(*args, **kwargs):
-        raise Exception('boom')
+        raise Exception("boom")
 
     StrictRedis.lpush = push
     yield
@@ -36,7 +37,7 @@ class Resource(object):
 
 class ViewSet(object):
     def get_name(*args, **kw):
-        return 'collection'
+        return "collection"
 
 
 class Service(object):
@@ -44,36 +45,36 @@ class Service(object):
 
 
 class Match(object):
-    cornice_services = {'watev': Service()}
-    pattern = 'watev'
+    cornice_services = {"watev": Service()}
+    pattern = "watev"
 
 
 class Request(object):
-    path = '/1/bucket/collection/'
-    prefixed_userid = 'tarek'
-    matchdict = {'id': UID}
+    path = "/1/bucket/collection/"
+    prefixed_userid = "tarek"
+    matchdict = {"id": UID}
     registry = matched_route = Match()
-    current_resource_name = 'bucket'
+    current_resource_name = "bucket"
 
 
 class ListenerCalledTest(unittest.TestCase):
-
     def setUp(self):
         self.config = testing.setUp()
-        self.config.add_settings({'events_pool_size': 1,
-                                  'events_url': 'redis://localhost:6379/0'})
-        self._redis = create_from_config(self.config, prefix='events_')
+        self.config.add_settings(
+            {"events_pool_size": 1, "events_url": "redis://localhost:6379/0"}
+        )
+        self._redis = create_from_config(self.config, prefix="events_")
         self._size = 0
 
-        self.sample_event = ResourceChanged({'action': ACTIONS.CREATE.value},
-                                            [],
-                                            Request())
+        self.sample_event = ResourceChanged(
+            {"action": ACTIONS.CREATE.value}, [], Request()
+        )
 
     def _save_redis(self):
-        self._size = self._redis.llen('kinto.core.events')
+        self._size = self._redis.llen("kinto.core.events")
 
     def has_redis_changed(self):
-        return self._redis.llen('kinto.core.events') > self._size
+        return self._redis.llen("kinto.core.events") > self._size
 
     def notify(self, event):
         self._save_redis()
@@ -82,12 +83,13 @@ class ListenerCalledTest(unittest.TestCase):
     @contextmanager
     def redis_listening(self):
         config = self.config
-        listener = 'kinto_redis.listeners'
+        listener = "kinto_redis.listeners"
 
         # setting up the redis listener
-        with mock.patch.dict(config.registry.settings,
-                             [('event_listeners', listener),
-                              ('event_listeners.redis.pool_size', '1')]):
+        with mock.patch.dict(
+            config.registry.settings,
+            [("event_listeners", listener), ("event_listeners.redis.pool_size", "1")],
+        ):
             initialization.setup_listeners(config)
             config.commit()
             yield
@@ -99,18 +101,19 @@ class ListenerCalledTest(unittest.TestCase):
             self.assertTrue(self.has_redis_changed())
 
         # okay, we should have the first event in Redis
-        last = self._redis.lpop('kinto.core.events')
-        last = json.loads(last.decode('utf8'))
-        self.assertEqual(last['action'], ACTIONS.CREATE.value)
+        last = self._redis.lpop("kinto.core.events")
+        last = json.loads(last.decode("utf8"))
+        self.assertEqual(last["action"], ACTIONS.CREATE.value)
 
     def test_notification_is_broken(self):
         with self.redis_listening():
             # an event with a bad JSON should silently break and send nothing
             # date time objects cannot be dumped
-            event2 = ResourceChanged({'action': ACTIONS.CREATE.value,
-                                      'somedate': datetime.now()},
-                                     [],
-                                     Request())
+            event2 = ResourceChanged(
+                {"action": ACTIONS.CREATE.value, "somedate": datetime.now()},
+                [],
+                Request(),
+            )
             self.notify(event2)
             self.assertFalse(self.has_redis_changed())
 

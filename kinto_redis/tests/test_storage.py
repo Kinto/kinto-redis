@@ -11,43 +11,45 @@ from kinto_redis import storage as redisbackend
 
 class RedisStorageTest(StorageTest, unittest.TestCase):
     backend = redisbackend
-    settings = {
-        'storage_pool_size': 50,
-        'storage_url': ''
-    }
+    settings = {"storage_pool_size": 50, "storage_url": ""}
 
     def setUp(self):
         super(RedisStorageTest, self).setUp()
         self.client_error_patcher = mock.patch.object(
-            self.storage._client.connection_pool, 'get_connection',
-            side_effect=redis.exceptions.RedisError('connection error')
+            self.storage._client.connection_pool,
+            "get_connection",
+            side_effect=redis.exceptions.RedisError("connection error"),
         )
 
     def test_config_is_taken_in_account(self):
         config = testing.setUp(settings=self.settings)
-        config.add_settings({'storage_url': 'redis://:blah@store.loc:7777/6'})
+        config.add_settings({"storage_url": "redis://:blah@store.loc:7777/6"})
         backend = self.backend.load_from_config(config)
         self.assertDictEqual(
             backend.settings,
-            {'host': 'store.loc', 'password': 'blah', 'db': 6, 'port': 7777})
+            {"host": "store.loc", "password": "blah", "db": 6, "port": 7777},
+        )
 
     def test_timeout_is_passed_to_redis_client(self):
         config = testing.setUp(settings=self.settings)
-        config.add_settings({'storage_pool_timeout': '1.5'})
+        config.add_settings({"storage_pool_timeout": "1.5"})
         backend = self.backend.load_from_config(config)
         self.assertEqual(backend._client.connection_pool.timeout, 1.5)
 
     def test_backend_error_is_raised_anywhere(self):
-        with mock.patch.object(self.storage._client, 'pipeline',
-                               side_effect=redis.RedisError):
+        with mock.patch.object(
+            self.storage._client, "pipeline", side_effect=redis.RedisError
+        ):
             StorageTest.test_backend_error_is_raised_anywhere(self)
 
     def test_list_all_handle_expired_values(self):
-        obj = '{"id": "foo"}'.encode('utf-8')
-        mocked_smember = mock.patch.object(self.storage._client, "smembers",
-                                           return_value=['a', 'b'])
-        mocked_mget = mock.patch.object(self.storage._client, "mget",
-                                        return_value=[obj, None])
+        obj = '{"id": "foo"}'.encode("utf-8")
+        mocked_smember = mock.patch.object(
+            self.storage._client, "smembers", return_value=["a", "b"]
+        )
+        mocked_mget = mock.patch.object(
+            self.storage._client, "mget", return_value=[obj, None]
+        )
         with mocked_smember:
             with mocked_mget:
                 self.storage.list_all(**self.storage_kw)  # not raising
@@ -55,7 +57,7 @@ class RedisStorageTest(StorageTest, unittest.TestCase):
     def test_errors_logs_stack_trace(self):
         self.client_error_patcher.start()
 
-        with mock.patch('kinto.core.storage.logger.exception') as exc_handler:
+        with mock.patch("kinto.core.storage.logger.exception") as exc_handler:
             with self.assertRaises(exceptions.BackendError):
                 self.storage.list_all(**self.storage_kw)
 
