@@ -142,16 +142,16 @@ class Storage(MemoryBasedStorage):
         self.set_object_timestamp(resource_name, parent_id, obj,
                                   modified_field=modified_field)
 
-        obj_key = '{0}.{1}.{2}.objects'.format(resource_name,
-                                                  parent_id,
-                                                  _id)
+        obj_key = '{0}.{1}.{2}.records'.format(resource_name,
+                                               parent_id,
+                                               _id)
         with self._client.pipeline() as multi:
             multi.set(
                 obj_key,
                 self._encode(obj)
             )
             multi.sadd(
-                '{0}.{1}.objects'.format(resource_name, parent_id),
+                '{0}.{1}.records'.format(resource_name, parent_id),
                 _id
             )
             multi.srem(
@@ -168,7 +168,7 @@ class Storage(MemoryBasedStorage):
             id_field=DEFAULT_ID_FIELD,
             modified_field=DEFAULT_MODIFIED_FIELD,
             auth=None):
-        obj_key = '{0}.{1}.{2}.objects'.format(resource_name,
+        obj_key = '{0}.{1}.{2}.records'.format(resource_name,
                                                   parent_id,
                                                   object_id)
         encoded_item = self._client.get(obj_key)
@@ -188,7 +188,7 @@ class Storage(MemoryBasedStorage):
         self.set_object_timestamp(resource_name, parent_id, obj,
                                   modified_field=modified_field)
 
-        obj_key = '{0}.{1}.{2}.objects'.format(resource_name,
+        obj_key = '{0}.{1}.{2}.records'.format(resource_name,
                                                   parent_id,
                                                   object_id)
         with self._client.pipeline() as multi:
@@ -197,7 +197,7 @@ class Storage(MemoryBasedStorage):
                 self._encode(obj)
             )
             multi.sadd(
-                '{0}.{1}.objects'.format(resource_name, parent_id),
+                '{0}.{1}.records'.format(resource_name, parent_id),
                 object_id
             )
             multi.srem(
@@ -215,14 +215,14 @@ class Storage(MemoryBasedStorage):
                modified_field=DEFAULT_MODIFIED_FIELD,
                deleted_field=DEFAULT_DELETED_FIELD,
                auth=None, last_modified=None):
-        obj_key = '{0}.{1}.{2}.objects'.format(resource_name,
+        obj_key = '{0}.{1}.{2}.records'.format(resource_name,
                                                   parent_id,
                                                   object_id)
         with self._client.pipeline() as multi:
             multi.get(obj_key)
             multi.delete(obj_key)
             multi.srem(
-                '{0}.{1}.objects'.format(resource_name, parent_id),
+                '{0}.{1}.records'.format(resource_name, parent_id),
                 object_id
             )
             responses = multi.execute()
@@ -316,7 +316,7 @@ class Storage(MemoryBasedStorage):
         if resource_name is None:
             resource_name = '*'
 
-        keys_pattern = '{0}.{1}.objects'.format(resource_name, parent_id)
+        keys_pattern = '{0}.{1}.records'.format(resource_name, parent_id)
 
         resources_keys = [key.decode('utf-8') for key in
                           self._client.scan_iter(match=keys_pattern)]
@@ -335,7 +335,7 @@ class Storage(MemoryBasedStorage):
             if len(ids) == 0:  # pragma: no cover
                 continue
 
-            objects_keys = ['{0}.{1}.{2}.objects'.format(resource_name,
+            objects_keys = ['{0}.{1}.{2}.records'.format(resource_name,
                                                          parent_id,
                                                          _id.decode('utf-8'))
                             for _id in ids]

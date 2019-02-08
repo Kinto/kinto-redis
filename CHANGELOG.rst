@@ -7,7 +7,7 @@ Changelog
 
 **Breaking changes**
 
-- Upgrade to Kinto 13 api. Redis keys changed. ``*.records`` became ``*.objects``.
+- Upgrade to Kinto >= 13 storage API.
 
 
 1.3.0 (2018-04-26)
