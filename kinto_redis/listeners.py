@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import json
 
 from kinto.core import logger
@@ -15,6 +14,7 @@ class Listener(ListenerBase):
     This listener allows actions to be performed asynchronously, using Redis
     Pub/Sub notifications, or scheduled inspections of the queue.
     """
+
     def __init__(self, client, listname, *args, **kwargs):
         super(Listener, self).__init__(*args, **kwargs)
         self._client = client
@@ -34,8 +34,8 @@ class Listener(ListenerBase):
 
 def load_from_config(config, prefix):
     settings = config.get_settings()
-    settings.setdefault(prefix + 'url', '')
-    settings.setdefault(prefix + 'pool_size', 25)
-    listname = settings.get(prefix + 'listname', 'kinto.core.events')
+    settings.setdefault(prefix + "url", "")
+    settings.setdefault(prefix + "pool_size", 25)
+    listname = settings.get(prefix + "listname", "kinto.core.events")
     client = create_from_config(config, prefix)
     return Listener(client, listname=listname)

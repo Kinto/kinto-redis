@@ -1,9 +1,8 @@
+black
 pytest
-mock
 pytest-watch
 pytest-cache
 pytest-cov
 pytest-sugar
 tox
-unittest2
 webtest
