@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from kinto.core.cache import CacheBase
 from kinto_redis.storage import wrap_redis_error, create_from_config
 from kinto.core.utils import json
