@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import mock
 import redis
 import unittest
@@ -42,21 +41,21 @@ class RedisStorageTest(StorageTest, unittest.TestCase):
                                side_effect=redis.RedisError):
             StorageTest.test_backend_error_is_raised_anywhere(self)
 
-    def test_get_all_handle_expired_values(self):
-        record = '{"id": "foo"}'.encode('utf-8')
+    def test_list_all_handle_expired_values(self):
+        obj = '{"id": "foo"}'.encode('utf-8')
         mocked_smember = mock.patch.object(self.storage._client, "smembers",
                                            return_value=['a', 'b'])
         mocked_mget = mock.patch.object(self.storage._client, "mget",
-                                        return_value=[record, None])
+                                        return_value=[obj, None])
         with mocked_smember:
             with mocked_mget:
-                self.storage.get_all(**self.storage_kw)  # not raising
+                self.storage.list_all(**self.storage_kw)  # not raising
 
     def test_errors_logs_stack_trace(self):
         self.client_error_patcher.start()
 
         with mock.patch('kinto.core.storage.logger.exception') as exc_handler:
             with self.assertRaises(exceptions.BackendError):
-                self.storage.get_all(**self.storage_kw)
+                self.storage.list_all(**self.storage_kw)
 
         self.assertTrue(exc_handler.called)
