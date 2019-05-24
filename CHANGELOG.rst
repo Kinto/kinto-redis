@@ -5,7 +5,9 @@ Changelog
 2.1.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+**Bug fixes**
+
+- ``pool_size`` setting should remain optional
 
 
 2.0.0 (2019-02-08)

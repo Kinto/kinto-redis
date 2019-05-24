@@ -34,14 +34,17 @@ def create_from_config(config, prefix=""):
     settings = config.get_settings()
     uri = settings[prefix + "url"]
     uri = urlparse(uri)
-    pool_size = int(settings[prefix + "pool_size"])
     kwargs = {
-        "max_connections": pool_size,
         "host": uri.hostname or "localhost",
         "port": uri.port or 6379,
         "password": uri.password or None,
         "db": int(uri.path[1:]) if uri.path else 0,
     }
+
+    pool_size = settings.get(prefix + "pool_size")
+    if pool_size is not None:
+        kwargs["max_connections"] = int(pool_size)
+
     block_timeout = settings.get(prefix + "pool_timeout")
     if block_timeout is not None:
         kwargs["timeout"] = float(block_timeout)
