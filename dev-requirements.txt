@@ -3,6 +3,5 @@ pytest
 pytest-watch
 pytest-cache
 pytest-cov
-pytest-sugar
 tox
 webtest
