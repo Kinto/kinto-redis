@@ -90,11 +90,11 @@ class Storage(MemoryBasedStorage):
         return utils.json.loads(obj.decode("utf-8"))
 
     @wrap_redis_error
-    def flush(self, auth=None):
+    def flush(self):
         self._client.flushdb()
 
     @wrap_redis_error
-    def resource_timestamp(self, resource_name, parent_id, auth=None):
+    def resource_timestamp(self, resource_name, parent_id):
         timestamp = self._client.get(
             "{0}.{1}.timestamp".format(resource_name, parent_id)
         )
@@ -148,7 +148,6 @@ class Storage(MemoryBasedStorage):
         id_generator=None,
         id_field=DEFAULT_ID_FIELD,
         modified_field=DEFAULT_MODIFIED_FIELD,
-        auth=None,
         ignore_conflict=False,
     ):
         id_generator = id_generator or self.id_generator
@@ -184,7 +183,6 @@ class Storage(MemoryBasedStorage):
         object_id,
         id_field=DEFAULT_ID_FIELD,
         modified_field=DEFAULT_MODIFIED_FIELD,
-        auth=None,
     ):
         obj_key = "{0}.{1}.{2}.records".format(resource_name, parent_id, object_id)
         encoded_item = self._client.get(obj_key)
@@ -203,7 +201,6 @@ class Storage(MemoryBasedStorage):
         obj,
         id_field=DEFAULT_ID_FIELD,
         modified_field=DEFAULT_MODIFIED_FIELD,
-        auth=None,
     ):
         obj = ujson.loads(self.json.dumps(obj))
         obj[id_field] = object_id
@@ -231,7 +228,6 @@ class Storage(MemoryBasedStorage):
         with_deleted=True,
         modified_field=DEFAULT_MODIFIED_FIELD,
         deleted_field=DEFAULT_DELETED_FIELD,
-        auth=None,
         last_modified=None,
     ):
         obj_key = "{0}.{1}.{2}.records".format(resource_name, parent_id, object_id)
@@ -281,7 +277,6 @@ class Storage(MemoryBasedStorage):
         before=None,
         id_field=DEFAULT_ID_FIELD,
         modified_field=DEFAULT_MODIFIED_FIELD,
-        auth=None,
     ):
 
         if resource_name is None:
@@ -395,7 +390,6 @@ class Storage(MemoryBasedStorage):
         id_field=DEFAULT_ID_FIELD,
         modified_field=DEFAULT_MODIFIED_FIELD,
         deleted_field=DEFAULT_DELETED_FIELD,
-        auth=None,
     ):
 
         objects = self._get_objects_by_parent_id(parent_id, resource_name)
@@ -457,7 +451,6 @@ class Storage(MemoryBasedStorage):
         id_field=DEFAULT_ID_FIELD,
         modified_field=DEFAULT_MODIFIED_FIELD,
         deleted_field=DEFAULT_DELETED_FIELD,
-        auth=None,
     ):
 
         objects = self._get_objects_by_parent_id(parent_id, resource_name)
@@ -482,7 +475,6 @@ class Storage(MemoryBasedStorage):
         with_deleted=True,
         modified_field=DEFAULT_MODIFIED_FIELD,
         deleted_field=DEFAULT_DELETED_FIELD,
-        auth=None,
     ):
         objects = self._get_objects_by_parent_id(
             parent_id, resource_name, with_meta=True
