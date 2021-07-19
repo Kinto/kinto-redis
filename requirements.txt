@@ -22,7 +22,7 @@ pycparser==2.20
 pyramid==2.0
 pyramid-multiauth==0.9.0
 pyramid-tm==2.4
-python-dateutil==2.8.1
+python-dateutil==2.8.2
 redis==3.5.3
 requests==2.25.1
 simplejson==3.17.2
