@@ -1,10 +1,8 @@
 from functools import wraps
 
-import ujson
 import redis
 from urllib.parse import urlparse
 
-from kinto.core import utils
 from kinto.core.decorators import deprecate_kwargs
 from kinto.core.storage import (
     exceptions,
@@ -84,10 +82,10 @@ class Storage(MemoryBasedStorage):
         return dict(self._client.connection_pool.connection_kwargs)
 
     def _encode(self, obj):
-        return utils.json.dumps(obj)
+        return self.json.dumps(obj)
 
     def _decode(self, obj):
-        return utils.json.loads(obj.decode("utf-8"))
+        return self.json.loads(obj.decode("utf-8"))
 
     @wrap_redis_error
     def flush(self):
@@ -151,7 +149,7 @@ class Storage(MemoryBasedStorage):
         ignore_conflict=False,
     ):
         id_generator = id_generator or self.id_generator
-        obj = ujson.loads(self.json.dumps(obj))
+        obj = self.json.loads(self.json.dumps(obj))
         if id_field in obj:
             # Raise unicity error if obj with same id already exists.
             try:
@@ -202,7 +200,7 @@ class Storage(MemoryBasedStorage):
         id_field=DEFAULT_ID_FIELD,
         modified_field=DEFAULT_MODIFIED_FIELD,
     ):
-        obj = ujson.loads(self.json.dumps(obj))
+        obj = self.json.loads(self.json.dumps(obj))
         obj[id_field] = object_id
         self.set_object_timestamp(
             resource_name, parent_id, obj, modified_field=modified_field

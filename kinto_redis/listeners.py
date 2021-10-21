@@ -1,7 +1,6 @@
-import json
-
 from kinto.core import logger
 from kinto.core.listeners import ListenerBase
+from kinto.core.utils import json
 
 from kinto_redis.storage import create_from_config
 

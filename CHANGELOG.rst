@@ -5,7 +5,7 @@ Changelog
 2.1.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Replacing ``ujson`` with ``kinto.core.utils.json``
 
 
 2.0.1 (2019-05-24)
