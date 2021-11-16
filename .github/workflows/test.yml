@@ -1,0 +1,77 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+name: Unit Testing
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toxenv: [py37, py38, py39, py310, kinto-master]
+        include:
+          - toxenv: py37
+            python-version: "3.7"
+          - toxenv: py38
+            python-version: "3.8"
+          - toxenv: py39
+            python-version: "3.9"
+          - toxenv: py310
+            python-version: "3.10"
+          - toxenv: kinto-master
+            python-version: "3.10"
+
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Environment
+        run: |
+          python --version
+          pip --version
+
+      - name: Install dependencies
+        run: pip install tox coveralls
+
+      - name: Tox
+        run: tox -e ${{ matrix.toxenv  }}
+
+      - name: Upload Coverage Results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.toxenv }}
+          COVERALLS_PARALLEL: true
+        run: coveralls --service=github
+
+  coveralls:
+    name: Indicate completion to coveralls.io
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+      - name: Install coveralls
+        run: pip install coveralls
+      - name: Finished
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: coveralls --service=github --finish

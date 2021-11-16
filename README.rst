@@ -3,8 +3,8 @@ Kinto Redis
 
 |travis| |coveralls|
 
-.. |travis| image:: https://travis-ci.org/Kinto/kinto-redis.svg?branch=master
-    :target: https://travis-ci.org/Kinto/kinto-redis
+.. |travis| image:: https://github.com/Kinto/kinto-redis/actions/workflows/test.yml/badge.svg
+    :target: https://github.com/Kinto/kinto-redis/actions
 
 .. |coveralls| image:: https://coveralls.io/repos/github/Kinto/kinto-redis/badge.svg?branch=master
     :target: https://coveralls.io/github/Kinto/kinto-redis?branch=master
