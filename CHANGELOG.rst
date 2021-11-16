@@ -2,8 +2,10 @@ Changelog
 =========
 
 
-2.1.0 (unreleased)
+2.1.0 (2021-11-16)
 ------------------
+
+**Internal Changes**
 
 - Replacing ``ujson`` with ``kinto.core.utils.json``
 
