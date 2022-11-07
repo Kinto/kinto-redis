@@ -18,7 +18,7 @@ kinto==14.6.0
 logging-color-formatter==1.0.2
 PasteDeploy==2.1.1
 plaster==1.0
-plaster-pastedeploy==0.7
+plaster-pastedeploy==1.0.1
 pycparser==2.20
 pyramid==2.0
 pyramid-mailer==0.15.1
