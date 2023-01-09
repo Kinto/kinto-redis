@@ -3,7 +3,7 @@ bcrypt==3.2.0
 certifi==2021.10.8
 cffi==1.15.0
 charset-normalizer==2.0.7
-colander==1.8.3
+colander==2.0
 colorama==0.4.4
 cornice==6.0.0
 cornice-swagger==1.0.1
